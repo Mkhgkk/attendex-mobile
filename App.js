@@ -26,8 +26,7 @@ export default function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       {/* <StatusBar barStyle="l-content" /> */}
       <NavigationContainer theme={navigationTheme}>
-        <AppNavigator />
-        {/* {user ? <AppNavigator /> : <AuthNavigator />} */}
+        {user ? <AppNavigator /> : <AuthNavigator />}
       </NavigationContainer>
     </AuthContext.Provider>
   );

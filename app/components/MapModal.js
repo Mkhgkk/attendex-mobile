@@ -16,30 +16,35 @@ function MapModal({ visible, onPress, onRefresh, location, place }) {
         <MapView
           style={styles.map}
           initialRegion={{
-            latitude: 37.78825,
-            longitude: -122.4324,
-            latitudeDelta: 0.04,
-            longitudeDelta: 0.05,
+            latitude: location && location.latitude,
+            longitude: location && location.longitude,
+            latitudeDelta: 0.0008,
+            longitudeDelta: 0.0009,
           }}
         >
-          <Marker
-            coordinate={{
-              latitude: 37.78825,
-              longitude: -122.4324,
-            }}
-            title={place}
-            image={require("../assets/default.png")}
-            opacity={0.5}
-          />
-          {/* <Circle
+          <Circle
             center={{
-              latitude: 37.78825,
-              longitude: -122.4324,
+              latitude: place && place.latitude,
+              longitude: place && place.longitude,
             }}
             radius={10}
-            strokeWidth={1}
-            fillColor={colors.primary}
-          /> */}
+            strokeColor="transparent"
+            fillColor={"rgba(54, 252, 169, 0.4)"}
+          />
+          <Marker
+            coordinate={{
+              latitude: place && place.latitude,
+              longitude: place && place.longitude,
+            }}
+            title="Apple china"
+          />
+          <Marker
+            coordinate={{
+              latitude: location && location.latitude,
+              longitude: location && location.longitude,
+            }}
+            title="Me"
+          />
         </MapView>
 
         <TouchableOpacity style={styles.closeContainer} onPress={onPress}>

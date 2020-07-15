@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { View, StyleSheet, Dimensions, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../config/colors";
 import AppScreen from "../components/AppScreen";
@@ -8,10 +14,53 @@ import Card from "../components/Card";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
 import MapModal from "../components/MapModal";
+import useLocation from "../hooks/useLocation";
 
 function MainScreen(props) {
   const [check, setCheck] = useState(false);
   const [modal, setModal] = useState(false);
+  const [hour, setHour] = useState();
+  const [minute, setMinute] = useState();
+  // const location = useLocation();
+
+  const placeLocation = {
+    // latitude: 23.198659,
+    // longitude: 113.27657,
+    latitude: 37.66681066113026,
+    longitude: 127.05118912203275,
+  };
+
+  const location = {
+    latitude: 37.66681066113026,
+    longitude: 127.05118912203275,
+  };
+  useEffect(() => {
+    setTime;
+
+    return () => clearInterval(setTime);
+  }, []);
+
+  const setTime = setInterval(() => {
+    const time = new Date();
+    let hour = time.getHours();
+    let min = time.getMinutes();
+
+    setHour(hour);
+    setMinute(min);
+  }, 1000);
+
+  // const handleCheck = setInterval(() => {
+  //   if (location)
+  //     if (
+  //       placeLocation.latitude - 0.0001 <= placeLocation.latitude &&
+  //       location.latitude <= 23.198659 + 0.0001 &&
+  //       placeLocation.longitude - 0.0001 <= location.longitude &&
+  //       location.longitude <= placeLocation.longitude + 0.0001
+  //     )
+  //       setCheck(true);
+  //     else setCheck(false);
+  // }, 1000);
+
   return (
     <>
       <LinearGradient
@@ -74,16 +123,31 @@ function MainScreen(props) {
                 colors={[colors.primary_dark, colors.primary]}
                 style={styles.button3}
               >
-                <AppText style={styles.buttonText}>
-                  {check ? "Check in" : "out of range"}
-                </AppText>
+                {check ? (
+                  <View style={styles.checkInContiner}>
+                    <AppText style={styles.checkInText}>
+                      {`${hour}:${minute}`}
+                    </AppText>
+                    <AppText style={styles.checkIn}>CHECK IN</AppText>
+                  </View>
+                ) : (
+                  <AppText style={styles.buttonText}>
+                    {`${hour}:${minute}`}
+                  </AppText>
+                )}
               </LinearGradient>
             </View>
           </LinearGradient>
         </LottieView>
       </TouchableOpacity>
-
-      <MapModal visible={modal} onPress={() => setModal(false)} />
+      {location && (
+        <MapModal
+          visible={modal}
+          onPress={() => setModal(false)}
+          location={location}
+          place={placeLocation}
+        />
+      )}
     </>
   );
 }
@@ -159,7 +223,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: {
-    fontSize: 22,
+    fontSize: 40,
     color: colors.white,
     opacity: 0.7,
     textTransform: "uppercase",
@@ -193,6 +257,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   locationText: { color: colors.secondary, marginLeft: 5 },
+  checkInContiner: {
+    alignItems: "center",
+  },
+  checkInText: {
+    color: colors.white,
+    opacity: 0.7,
+    fontSize: 18,
+    marginBottom: 5,
+  },
+  checkIn: {
+    color: colors.white,
+    fontSize: 30,
+    textAlign: "center",
+    marginBottom: 10,
+  },
 });
 
 export default MainScreen;
