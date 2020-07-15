@@ -28,11 +28,11 @@ function WelcomeScreen({ navigation }) {
             padding={15}
             onPress={() => navigation.navigate(routes.LOGIN)}
           />
-          <AppButton
+          {/* <AppButton
             title="Register"
             padding={15}
             onPress={() => navigation.navigate(routes.REGISTER)}
-          />
+          /> */}
         </AppScreen>
       </ImageBackground>
     </LinearGradient>

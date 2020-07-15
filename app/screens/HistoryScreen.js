@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Image, FlatList } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../config/colors";
@@ -7,6 +7,12 @@ import AppText from "../components/AppText";
 import AppButton from "../components/AppButton";
 import List from "../components/List";
 import PickerModal from "../components/PickerModal";
+import useApi from "../hooks/useApi";
+import placeApi from "../api/place";
+import recordApi from "../api/record";
+import ActivityIndicator from "../components/ActivityIndicator";
+import moment from "moment";
+import { cos } from "react-native-reanimated";
 
 const icon = {
   onTime: {
@@ -21,53 +27,35 @@ const icon = {
   },
 };
 
-const listItem = [
-  {
-    place: "apple",
-    date: "Today",
-    time: "9:30 am",
-    state: "on time",
-    _id: "1",
-  },
-  {
-    place: "apple",
-    date: "6th July",
-    time: "9:30 am",
-    state: "on time",
-    _id: "2",
-  },
-  {
-    place: "apple",
-    date: "5th July",
-    time: "9:50 am",
-    state: "late",
-    _id: "3",
-  },
-  {
-    place: "apple",
-    date: "4th July",
-    time: "9:30 am",
-    state: "on time",
-    _id: "4",
-  },
-  {
-    place: "apple",
-    date: "3th July",
-    time: "9:30 am",
-    state: "on time",
-    _id: "5",
-  },
-];
-
 function HistoryScreen(props) {
   const [modal, setModal] = useState(false);
+  const getPlaceApi = useApi(placeApi.getPlace);
+  const getRecordsApi = useApi(recordApi.getRecords);
+
+  useEffect(() => {
+    getPlaceApi.request();
+    getRecordsApi.request();
+  }, []);
 
   const handleData = (item) => {
     console.log(item);
   };
 
+  const isOnTime = (date) => {
+    const checkInTime = moment(new Date().setHours(22, 30, 0));
+
+    const checkIn = checkInTime.minutes() + checkInTime.hours() * 60;
+    const compare = date.minutes() + date.hours() * 60;
+
+    if (checkIn >= compare) return true;
+    else return false;
+  };
+
   return (
     <>
+      <ActivityIndicator
+        visible={getPlaceApi.loading || getRecordsApi.loading}
+      />
       <LinearGradient
         colors={[colors.primary, colors.primary_dark]}
         style={styles.header}
@@ -77,11 +65,15 @@ function HistoryScreen(props) {
           <View style={styles.placeContainer}>
             <Image
               style={styles.image}
-              source={require("../assets/appleLogo.png")}
+              source={
+                getPlaceApi.data.logo
+                  ? { uri: getPlaceApi.data.logo }
+                  : require("../assets/placeDefault.png")
+              }
             />
             <View style={styles.placeCol}>
-              <AppText style={styles.place}>Apple china</AppText>
-              <AppText style={styles.subPlace}>Apple china</AppText>
+              <AppText style={styles.place}>{getPlaceApi.data.name}</AppText>
+              <AppText style={styles.subPlace}>{getPlaceApi.data.name}</AppText>
             </View>
             <AppButton
               title="place"
@@ -95,30 +87,32 @@ function HistoryScreen(props) {
       </LinearGradient>
       <AppScreen style={styles.contaier}>
         <FlatList
-          data={listItem}
-          keyExtractor={(listing) => listing._id.toString()}
+          data={getRecordsApi.data}
+          keyExtractor={(listing) => listing._id}
           renderItem={({ item }) => (
             <View style={styles.bigContainer}>
-              <AppText style={styles.time}>{item.date}</AppText>
+              <AppText style={styles.time}>
+                {moment(item.date).format("MMM Do")}
+              </AppText>
               <View style={styles.listContainer}>
                 <List
-                  icon={item.state === "on time" ? icon.onTime : icon.late}
-                  title={item.state}
-                  subTitle={item.time}
+                  icon={isOnTime(moment(item.date)) ? icon.onTime : icon.late}
+                  title={isOnTime(moment(item.date)) ? "on time" : "late"}
+                  subTitle={moment(item.date).format("LT")}
                 />
               </View>
             </View>
           )}
         />
       </AppScreen>
-      <PickerModal
+      {/* <PickerModal
         visible={modal}
-        items={["Apple china", "Huawei", "TikTok"]}
+        items={[getPlaceApi.data.name]}
         onClose={() => setModal(false)}
-        value={"Apple china"}
+        value={getPlaceApi.data.name}
         onSelectItem={handleData}
         placeholder="Place"
-      />
+      /> */}
     </>
   );
 }

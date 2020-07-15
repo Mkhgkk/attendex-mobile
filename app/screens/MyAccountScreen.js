@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { View, StyleSheet, Image, Alert } from "react-native";
 import colors from "../config/colors";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,25 +8,39 @@ import AppScreen from "../components/AppScreen";
 import Icon from "../components/Icon";
 import ListItem from "../components/ListItem";
 import routes from "../navigation/routes";
-
-const handleLogout = () => {
-  Alert.alert("Attendex", "Would you like to logout?", [
-    {
-      text: "No",
-      style: "cancel",
-    },
-    {
-      text: "Yes",
-      onPress: () => {
-        console.log("logout");
-      },
-    },
-  ]);
-};
+import AuthContext from "../auth/context";
+import useApi from "../hooks/useApi";
+import memberApi from "../api/member";
+import useAuth from "../auth/useAuth";
+import ActivityIndicator from "../components/ActivityIndicator";
 
 function MyAccountScreen({ navigation }) {
+  const { user } = useContext(AuthContext);
+  const { logOut } = useAuth();
+
+  const getUserDetailApi = useApi(memberApi.getMemberDetail);
+
+  useEffect(() => {
+    getUserDetailApi.request(user._id);
+  }, []);
+
+  const handleLogout = () => {
+    Alert.alert("Attendex", "Would you like to logout?", [
+      {
+        text: "No",
+        style: "cancel",
+      },
+      {
+        text: "Yes",
+        onPress: () => {
+          logOut();
+        },
+      },
+    ]);
+  };
   return (
     <>
+      <ActivityIndicator visible={getUserDetailApi.loading} />
       <LinearGradient
         colors={[colors.primary, colors.primary_dark]}
         style={styles.header}
@@ -37,17 +51,23 @@ function MyAccountScreen({ navigation }) {
           <View style={styles.profile}>
             <Image
               style={styles.avatar}
-              source={require("../assets/default.png")}
+              source={
+                getUserDetailApi.data.avatar
+                  ? { uri: getUserDetailApi.data.avatar }
+                  : require("../assets/default.png")
+              }
             />
-            <AppText style={styles.name}>Joy</AppText>
-            <AppText style={styles.email}>email@address.com</AppText>
+            <AppText style={styles.name}>{user.name}</AppText>
+            <AppText style={styles.email}>
+              {getUserDetailApi.data.phone}
+            </AppText>
           </View>
         </AppScreen>
       </LinearGradient>
       <AppScreen style={styles.container}>
         <ListItem
           onPress={() => navigation.navigate(routes.MYPLACES)}
-          title="My Places"
+          title="My Work Places"
           IconComponent={
             <Icon name="map-marker" backgroundColor={colors.primary_light} />
           }

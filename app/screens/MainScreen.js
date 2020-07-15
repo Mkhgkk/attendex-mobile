@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   StyleSheet,
@@ -15,12 +15,19 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
 import MapModal from "../components/MapModal";
 import useLocation from "../hooks/useLocation";
+import moment from "moment";
+import AuthContext from "../auth/context";
+import ActivityIndicator from "../components/ActivityIndicator";
+import useApi from "../hooks/useApi";
+import placeApi from "../api/place";
+import recordApi from "../api/record";
 
 function MainScreen(props) {
   const [check, setCheck] = useState(false);
   const [modal, setModal] = useState(false);
-  const [hour, setHour] = useState();
-  const [minute, setMinute] = useState();
+  const [clock, setClock] = useState(moment(new Date()).format("HH:mm"));
+  const { user } = useContext(AuthContext);
+  const getPlaceApi = useApi(placeApi.getPlace);
   // const location = useLocation();
 
   const placeLocation = {
@@ -35,19 +42,17 @@ function MainScreen(props) {
     longitude: 127.05118912203275,
   };
   useEffect(() => {
+    getPlaceApi.request();
     setTime;
-
     return () => clearInterval(setTime);
   }, []);
 
   const setTime = setInterval(() => {
-    const time = new Date();
-    let hour = time.getHours();
-    let min = time.getMinutes();
-
-    setHour(hour);
-    setMinute(min);
+    const clock = moment(new Date()).format("HH:mm");
+    setClock(clock);
   }, 1000);
+
+  const date = moment(new Date()).format("MMMM Do, dddd");
 
   // const handleCheck = setInterval(() => {
   //   if (location)
@@ -61,8 +66,20 @@ function MainScreen(props) {
   //     else setCheck(false);
   // }, 1000);
 
+  const handleCheckIn = () => {
+    if (check) {
+      try {
+        recordApi.newRecord();
+        Alert.alert("Sucessfully checked in!");
+      } catch (ex) {
+        Alert.alert("Occured unexpected problem! Please check in again.");
+      }
+    } else Alert.alert("You are not in location");
+  };
+
   return (
     <>
+      <ActivityIndicator visible={getPlaceApi.loading} />
       <LinearGradient
         colors={[colors.primary_dark, colors.primary]}
         style={styles.background}
@@ -74,8 +91,8 @@ function MainScreen(props) {
             <AppText style={styles.text}>Attendex</AppText>
           </View>
           <View>
-            <AppText style={styles.date}>7th July, Monday </AppText>
-            <AppText style={styles.day}>Hello, Joy</AppText>
+            <AppText style={styles.date}>{date}</AppText>
+            <AppText style={styles.day}>Hello, {user.name}</AppText>
           </View>
         </View>
 
@@ -83,9 +100,13 @@ function MainScreen(props) {
           {check ? (
             <Card
               onPress={() => setModal(true)}
-              image={require("../assets/appleLogo.png")}
-              title="Apple china"
-              description="China, Guangdong Province, Guangzhou, Tianhe District, Tianhe Rd, 590号百脑汇科技大厦B1"
+              image={
+                getPlaceApi.data.logo
+                  ? getPlaceApi.data.logo
+                  : require("../assets/placeDefault.png")
+              }
+              title={getPlaceApi.data.name}
+              description={getPlaceApi.data.address}
               subTitle="My work"
             />
           ) : (
@@ -103,7 +124,7 @@ function MainScreen(props) {
           )}
         </View>
       </AppScreen>
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
         <LottieView
           autoPlay
           loop
@@ -125,15 +146,11 @@ function MainScreen(props) {
               >
                 {check ? (
                   <View style={styles.checkInContiner}>
-                    <AppText style={styles.checkInText}>
-                      {`${hour}:${minute}`}
-                    </AppText>
+                    <AppText style={styles.checkInText}>{clock}</AppText>
                     <AppText style={styles.checkIn}>CHECK IN</AppText>
                   </View>
                 ) : (
-                  <AppText style={styles.buttonText}>
-                    {`${hour}:${minute}`}
-                  </AppText>
+                  <AppText style={styles.buttonText}>{clock}</AppText>
                 )}
               </LinearGradient>
             </View>

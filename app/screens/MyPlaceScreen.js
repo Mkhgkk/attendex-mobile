@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, View, FlatList } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import colors from "../config/colors";
@@ -7,77 +7,52 @@ import Card from "../components/Card";
 import { LinearGradient } from "expo-linear-gradient";
 import AppScreen from "../components/AppScreen";
 import routes from "../navigation/routes";
-
-const places = [
-  {
-    _id: 1,
-    image: require("../assets/appleLogo.png"),
-    place: "Apple china",
-    label: "My work",
-    address:
-      "China, Guangdong Province, Guangzhou, Tianhe District, Tianhe Rd, 590号百脑汇科技大厦B1",
-  },
-  {
-    _id: 2,
-    image: require("../assets/appleLogo.png"),
-    place: "Apple china",
-    label: "My work",
-    address:
-      "China, Guangdong Province, Guangzhou, Tianhe District, Tianhe Rd, 590号百脑汇科技大厦B1",
-  },
-  {
-    _id: 3,
-    image: require("../assets/appleLogo.png"),
-    place: "Apple china",
-    label: "My work",
-    address:
-      "China, Guangdong Province, Guangzhou, Tianhe District, Tianhe Rd, 590号百脑汇科技大厦B1",
-  },
-  {
-    _id: 4,
-    image: require("../assets/appleLogo.png"),
-    place: "Apple china",
-    label: "My work",
-    address:
-      "China, Guangdong Province, Guangzhou, Tianhe District, Tianhe Rd, 590号百脑汇科技大厦B1",
-  },
-];
+import useApi from "../hooks/useApi";
+import placeApi from "../api/place";
+import ActivityIndicator from "../components/ActivityIndicator";
 
 function MyPlaceScreen({ navigation }) {
-  return (
-    <LinearGradient
-      colors={[colors.primary_dark, colors.primary]}
-      style={styles.container}
-    >
-      <AppScreen style={styles.list}>
-        <MaterialCommunityIcons
-          name="chevron-left"
-          size={35}
-          color={colors.white}
-          style={styles.chevron}
-          onPress={() => {
-            navigation.navigate(routes.MYACCOUNT);
-          }}
-        />
-        <AppText style={styles.title}>My Places</AppText>
+  const getPlaceApi = useApi(placeApi.getPlace);
 
-        <View>
-          <FlatList
-            data={places}
-            keyExtractor={(listing) => listing._id.toString()}
-            renderItem={({ item }) => (
-              <Card
-                image={item.image}
-                title={item.place}
-                subTitle={item.label}
-                description={item.address}
-                backgroundColor={colors.light}
-              />
-            )}
+  useEffect(() => {
+    getPlaceApi.request();
+  }, []);
+
+  return (
+    <>
+      <ActivityIndicator visible={getPlaceApi.loading} />
+      <LinearGradient
+        colors={[colors.primary_dark, colors.primary]}
+        style={styles.container}
+      >
+        <AppScreen style={styles.list}>
+          <MaterialCommunityIcons
+            name="chevron-left"
+            size={35}
+            color={colors.white}
+            style={styles.chevron}
+            onPress={() => {
+              navigation.navigate(routes.MYACCOUNT);
+            }}
           />
-        </View>
-      </AppScreen>
-    </LinearGradient>
+          <AppText style={styles.title}>My Work Places</AppText>
+
+          <View>
+            <Card
+              image={
+                getPlaceApi.data.logo
+                  ? { uri: getPlaceApi.data.logo }
+                  : require("../assets/placeDefault.png")
+              }
+              title={getPlaceApi.data.name}
+              subTitle="My work"
+              description={getPlaceApi.data.address}
+              backgroundColor={colors.light}
+            />
+          </View>
+        </AppScreen>
+      </LinearGradient>
+    </>
   );
 }
 
