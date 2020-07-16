@@ -12,23 +12,21 @@ import AppScreen from "../components/AppScreen";
 import AppText from "../components/AppText";
 import Card from "../components/Card";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import LottieView from "lottie-react-native";
 import MapModal from "../components/MapModal";
-import useLocation from "../hooks/useLocation";
 import moment from "moment";
 import AuthContext from "../auth/context";
 import ActivityIndicator from "../components/ActivityIndicator";
 import useApi from "../hooks/useApi";
 import placeApi from "../api/place";
 import recordApi from "../api/record";
+import * as Location from "expo-location";
 
 function MainScreen(props) {
-  const [check, setCheck] = useState(false);
   const [modal, setModal] = useState(false);
   const [clock, setClock] = useState(moment(new Date()).format("HH:mm"));
   const { user } = useContext(AuthContext);
   const getPlaceApi = useApi(placeApi.getPlace);
-  // const location = useLocation();
+  const [location, setLocation] = useState();
 
   const placeLocation = {
     // latitude: 23.198659,
@@ -37,15 +35,40 @@ function MainScreen(props) {
     longitude: 127.05118912203275,
   };
 
-  const location = {
-    latitude: 37.66681066113026,
-    longitude: 127.05118912203275,
+  const getLocationFirst = async () => {
+    try {
+      const { granted } = await Location.requestPermissionsAsync();
+      if (!granted) return;
+      const {
+        coords: { latitude, longitude },
+      } = await Location.getLastKnownPositionAsync();
+      setLocation({ latitude, longitude });
+    } catch (error) {
+      console.log(error);
+    }
   };
+  // const location = {
+  //   latitude: 37.66681066113026,
+  //   longitude: 127.05118912203275,
+  // };
   useEffect(() => {
     getPlaceApi.request();
+    getLocationFirst();
     setTime;
-    return () => clearInterval(setTime);
+    setLocationTimer;
+    return () => clearInterval(setTime, setLocationTimer);
   }, []);
+
+  const getLocation = async () => {
+    const {
+      coords: { latitude, longitude },
+    } = await Location.getLastKnownPositionAsync();
+    setLocation({ latitude, longitude });
+  };
+
+  const setLocationTimer = setInterval(() => {
+    getLocation();
+  }, 30000);
 
   const setTime = setInterval(() => {
     const clock = moment(new Date()).format("HH:mm");
@@ -54,20 +77,20 @@ function MainScreen(props) {
 
   const date = moment(new Date()).format("MMMM Do, dddd");
 
-  // const handleCheck = setInterval(() => {
-  //   if (location)
-  //     if (
-  //       placeLocation.latitude - 0.0001 <= placeLocation.latitude &&
-  //       location.latitude <= 23.198659 + 0.0001 &&
-  //       placeLocation.longitude - 0.0001 <= location.longitude &&
-  //       location.longitude <= placeLocation.longitude + 0.0001
-  //     )
-  //       setCheck(true);
-  //     else setCheck(false);
-  // }, 1000);
+  const handleActive = () => {
+    if (location)
+      if (
+        placeLocation.latitude - 0.1 <= location.latitude &&
+        location.latitude <= placeLocation.latitude + 0.1 &&
+        placeLocation.longitude - 0.1 <= location.longitude &&
+        location.longitude <= placeLocation.longitude + 0.1
+      )
+        return true;
+      else return false;
+  };
 
   const handleCheckIn = () => {
-    if (check) {
+    if (location && handleActive()) {
       try {
         recordApi.newRecord();
         Alert.alert("Sucessfully checked in!");
@@ -97,7 +120,7 @@ function MainScreen(props) {
         </View>
 
         <View style={styles.location}>
-          {check ? (
+          {location && handleActive() ? (
             <Card
               onPress={() => setModal(true)}
               image={
@@ -125,15 +148,14 @@ function MainScreen(props) {
         </View>
       </AppScreen>
       <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
-        <LottieView
-          autoPlay
-          loop
-          style={styles.lottie}
-          source={
-            check
-              ? require("../assets/blink.json")
-              : require("../assets/none.json")
-          }
+        <View
+          style={[
+            styles.lottie,
+            {
+              backgroundColor:
+                location && handleActive() ? colors.secondary : colors.primary,
+            },
+          ]}
         >
           <LinearGradient
             colors={[colors.primary_medium, colors.primary]}
@@ -144,7 +166,7 @@ function MainScreen(props) {
                 colors={[colors.primary_dark, colors.primary]}
                 style={styles.button3}
               >
-                {check ? (
+                {location && handleActive() ? (
                   <View style={styles.checkInContiner}>
                     <AppText style={styles.checkInText}>{clock}</AppText>
                     <AppText style={styles.checkIn}>CHECK IN</AppText>
@@ -155,7 +177,7 @@ function MainScreen(props) {
               </LinearGradient>
             </View>
           </LinearGradient>
-        </LottieView>
+        </View>
       </TouchableOpacity>
       {location && (
         <MapModal

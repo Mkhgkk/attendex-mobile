@@ -105,14 +105,14 @@ function HistoryScreen(props) {
           )}
         />
       </AppScreen>
-      {/* <PickerModal
+      <PickerModal
         visible={modal}
         items={[getPlaceApi.data.name]}
         onClose={() => setModal(false)}
         value={getPlaceApi.data.name}
         onSelectItem={handleData}
         placeholder="Place"
-      /> */}
+      />
     </>
   );
 }

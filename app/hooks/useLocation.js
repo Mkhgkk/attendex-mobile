@@ -20,7 +20,7 @@ export default useLocation = () => {
   useEffect(() => {
     // setInterval(() => {
     //   getLocation();
-    // }, 1000);
+    // },);
     // return () => clearInterval(setInterval);
     getLocation();
   }, []);
