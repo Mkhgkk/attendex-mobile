@@ -20,6 +20,7 @@ import useApi from "../hooks/useApi";
 import placeApi from "../api/place";
 import recordApi from "../api/record";
 import * as Location from "expo-location";
+import * as LocalAuthentication from "expo-local-authentication";
 
 function MainScreen(props) {
   const [modal, setModal] = useState(false);
@@ -89,13 +90,18 @@ function MainScreen(props) {
       else return false;
   };
 
-  const handleCheckIn = () => {
+  const handleCheckIn = async () => {
     if (location && handleActive()) {
-      try {
-        recordApi.newRecord();
-        Alert.alert("Sucessfully checked in!");
-      } catch (ex) {
-        Alert.alert("Occured unexpected problem! Please check in again.");
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Please verify yourself!",
+      });
+      if (result.success) {
+        try {
+          recordApi.newRecord();
+          Alert.alert("Sucessfully checked in!");
+        } catch (ex) {
+          Alert.alert("Occured unexpected problem! Please check in again.");
+        }
       }
     } else Alert.alert("You are not in location");
   };

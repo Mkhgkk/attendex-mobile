@@ -6,12 +6,7 @@ import AppScreen from "./AppScreen";
 import { Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-function CardScreen({
-  header,
-  children,
-  height = 85,
-  topBackgroundImage,
-}) {
+function CardScreen({ header, children, height = 85, topBackgroundImage }) {
   return (
     <>
       {topBackgroundImage && (
